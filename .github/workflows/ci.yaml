@@ -19,7 +19,7 @@ jobs:
         go-version: '1.23'
 
     - name: Checkout
-    - uses: actions/checkout@v4
+      uses: actions/checkout@v4
 
     - name: Build
       run: go build -v ./...
@@ -48,7 +48,7 @@ jobs:
         go-version: '1.23'
 
     - name: Checkout
-    - uses: actions/checkout@v4
+      uses: actions/checkout@v4
 
     - name: Run DB migrations
       run: make migrateup
