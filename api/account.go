@@ -4,6 +4,7 @@ import (
 	db "bank-app/db/sqlc"
 	"database/sql"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -84,6 +85,52 @@ func (server *Server) listAccounts(ctx *gin.Context) {
 			return
 		}
 
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, account)
+}
+
+// Request payload
+type addAccountBalanceRequest struct {
+	Amount int64 `json:"amount" binding:"required,min=1,max=100000"`
+}
+
+// Handler function
+func (server *Server) addAccountBalance(ctx *gin.Context) {
+	// Validate account ID from the URL
+	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// Bind and validate the request body
+	var req addAccountBalanceRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// Check if the account exists
+	_, err = server.store.GetAccount(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+		} else {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		}
+		return
+	}
+
+	// Update the account balance in the database
+	arg := db.AddAccountBalanceParams{
+		Amount: req.Amount,
+	}
+
+	account, err := server.store.AddAccountBalance(ctx, arg)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
