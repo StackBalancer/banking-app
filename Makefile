@@ -1,20 +1,26 @@
+# Load environment variables from app.env file
+ifneq (,$(wildcard .env))
+include .env
+export
+endif
+
 postgres:
-	docker run --restart=always --network db_network --name postgres12 -p 5433:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
+	docker run --restart=always --network db_network --name postgres12 -p 5433:5432 -e POSTGRES_USER=$(POSTGRES_USER) -e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) -d postgres:12-alpine
 
 pgadmin:
-	docker run -d --restart=always --network db_network -p 5050:80 --name pgadmin -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" -e PGADMIN_DEFAULT_PASSWORD="admin" dpage/pgadmin4
+	docker run -d --restart=always --network db_network -p 5050:80 --name pgadmin -e PGADMIN_DEFAULT_EMAIL=$(PGADMIN_DEFAULT_EMAIL) -e PGADMIN_DEFAULT_PASSWORD=$(PGADMIN_DEFAULT_PASSWORD) dpage/pgadmin4
 
 createdb:
-	docker exec -it postgres12 createdb --username=root --owner=root simple_bank
+	docker exec -it postgres12 createdb --username=$(POSTGRES_USER) --owner=$(POSTGRES_USER) simple_bank
 
 dropdb:
 	docker exec -it postgres12 dropdb simple_bank
 
 migrateup:
-	migrate -path db/migration -database "postgresql://root:secret@localhost:5433/simple_bank?sslmode=disable" -verbose up
+	migrate -path db/migration -database "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5433/simple_bank?sslmode=disable" -verbose up
 
 migratedown:
-	migrate -path db/migration -database "postgresql://root:secret@localhost:5433/simple_bank?sslmode=disable" -verbose down
+	migrate -path db/migration -database "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5433/simple_bank?sslmode=disable" -verbose down
 
 sqlc:
 	sqlc generate
