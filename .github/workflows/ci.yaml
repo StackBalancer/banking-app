@@ -67,7 +67,11 @@ jobs:
         which migrate
 
     - name: Run DB migrations
-      run: make migrateup
+      run: |
+        set -a
+        source app.env
+        set +a
+        make migrateup
 
     - name: Test
       run: make test
