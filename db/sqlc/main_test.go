@@ -24,11 +24,6 @@ func TestMain(m *testing.M) {
 		log.Fatal("Cannot connect to db:", err)
 	}
 
-	// Verify the database connection
-	if err := testDB.Ping(); err != nil {
-		log.Fatal("Cannot ping database:", err)
-	}
-
 	testQueries = New(testDB)
 
 	os.Exit(m.Run())
